@@ -1,12 +1,12 @@
 const express = require("express");
-
 const router = express.Router();
-
+const {
+  getProfile,
+  updateProfile,
+} = require("../controllers/profileController");
 const protect = require("../middleware/authMiddleware");
 
-const { getProfile } = require("../controllers/profileController");
-
-// protected route
-router.get("/", protect, getProfile);
+router.get("/", protect, getProfile); // GET  /api/profile
+router.put("/", protect, updateProfile); // PUT  /api/profile
 
 module.exports = router;

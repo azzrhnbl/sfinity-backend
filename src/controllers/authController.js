@@ -10,6 +10,30 @@ const register = async (req, res) => {
     const { name, email, password, income_source, profession, monthly_income } =
       req.body;
 
+    // Validasi field wajib
+    if (!name || !email || !password)
+      return res
+        .status(400)
+        .json({ message: "Nama, email, password wajib diisi." });
+
+    // Validasi format email
+    const emailRegex =
+      /^[^\s@]+@(gmail|yahoo|outlook|hotmail|icloud|student)[.\w]*\.[a-z]{2,}$/i;
+    if (!emailRegex.test(email))
+      return res
+        .status(400)
+        .json({
+          message: "Email tidak valid. Gunakan Gmail, Yahoo, Outlook, dll.",
+        });
+
+    // Validasi password
+    if (password.length < 6)
+      return res.status(400).json({ message: "Password minimal 6 karakter." });
+    if (!/\d/.test(password))
+      return res
+        .status(400)
+        .json({ message: "Password harus mengandung minimal 1 angka." });
+
     // cek email sudah ada atau belum
     const existingUser = await User.findOne({
       email,
