@@ -1,21 +1,19 @@
-const Transaction = require("../models/Transaction");
+const {
+  createTransactionService,
+  getTransactionsService,
+  getTransactionSummaryService,
+  updateTransactionService,
+  deleteTransactionService,
+} = require("../services/transactionService");
 
 // CREATE TRANSACTION
 const createTransaction = async (req, res) => {
   try {
-    const { type, category, amount, description, transaction_date } = req.body;
-
-    const transaction = await Transaction.create({
-      user: req.user._id,
-      type,
-      category,
-      amount,
-      description,
-      transaction_date,
-    });
+    const transaction = await createTransactionService(req.user._id, req.body);
 
     res.status(201).json({
       message: "Transaction created successfully",
+
       transaction,
     });
   } catch (error) {
@@ -28,11 +26,7 @@ const createTransaction = async (req, res) => {
 // GET ALL TRANSACTIONS
 const getTransactions = async (req, res) => {
   try {
-    const transactions = await Transaction.find({
-      user: req.user._id,
-    }).sort({
-      createdAt: -1,
-    });
+    const transactions = await getTransactionsService(req.user._id);
 
     res.status(200).json({
       transactions,
@@ -47,29 +41,9 @@ const getTransactions = async (req, res) => {
 // GET TRANSACTION SUMMARY
 const getTransactionSummary = async (req, res) => {
   try {
-    const transactions = await Transaction.find({
-      user: req.user._id,
-    });
+    const summary = await getTransactionSummaryService(req.user._id);
 
-    let total_income = 0;
-
-    let total_expense = 0;
-
-    transactions.forEach((transaction) => {
-      if (transaction.type === "income") {
-        total_income += transaction.amount;
-      } else {
-        total_expense += transaction.amount;
-      }
-    });
-
-    const balance = total_income - total_expense;
-
-    res.status(200).json({
-      total_income,
-      total_expense,
-      balance,
-    });
+    res.status(200).json(summary);
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -80,28 +54,16 @@ const getTransactionSummary = async (req, res) => {
 // UPDATE TRANSACTION
 const updateTransaction = async (req, res) => {
   try {
-    const transaction = await Transaction.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
-
-    if (!transaction) {
-      return res.status(404).json({
-        message: "Transaction not found",
-      });
-    }
-
-    const updatedTransaction = await Transaction.findByIdAndUpdate(
+    const transaction = await updateTransactionService(
       req.params.id,
+      req.user._id,
       req.body,
-      {
-        new: true,
-      },
     );
 
     res.status(200).json({
       message: "Transaction updated successfully",
-      transaction: updatedTransaction,
+
+      transaction,
     });
   } catch (error) {
     res.status(500).json({
@@ -113,18 +75,7 @@ const updateTransaction = async (req, res) => {
 // DELETE TRANSACTION
 const deleteTransaction = async (req, res) => {
   try {
-    const transaction = await Transaction.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
-
-    if (!transaction) {
-      return res.status(404).json({
-        message: "Transaction not found",
-      });
-    }
-
-    await transaction.deleteOne();
+    await deleteTransactionService(req.params.id, req.user._id);
 
     res.status(200).json({
       message: "Transaction deleted successfully",
